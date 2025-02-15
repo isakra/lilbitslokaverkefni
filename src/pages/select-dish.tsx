@@ -11,17 +11,22 @@ const SelectDish = () => {
   }, []);
 
   const goToSelectDrinks = () => {
+    if (dish) {
+      localStorage.setItem("selectedDish", JSON.stringify(dish)); // Save to localStorage
+    }
     router.push("/select-drinks");
   };
 
   return (
     <div>
       <h1>Select a Dish</h1>
-      {dish && (
+      {dish ? (
         <div>
           <h2>{dish.strMeal}</h2>
-          <img src={dish.strMealThumb} alt={dish.strMeal} />
+          <img src={dish.strMealThumb} alt={dish.strMeal} width={200} />
         </div>
+      ) : (
+        <p>Loading dish...</p>
       )}
       <button onClick={goToSelectDrinks}>Next: Select Drinks</button>
     </div>
