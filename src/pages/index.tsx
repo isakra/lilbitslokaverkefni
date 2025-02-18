@@ -1,8 +1,6 @@
-// src/pages/index.tsx (Home Screen)
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
-import Link from "next/link";
 import axios from "axios";
 import Carousel from "react-multi-carousel";
 import "react-multi-carousel/lib/styles.css";
@@ -14,50 +12,38 @@ interface OrderResponse {
 const Home = () => {
   const [email, setEmail] = useState("");
   const [orderExists, setOrderExists] = useState(false);
-  const [error, setError] = useState("");
   const router = useRouter();
 
   useEffect(() => {
-    if (router.query.email) {
-      setEmail(router.query.email as string);
-      checkExistingOrder(router.query.email as string);
+    if (email) {
+      axios.get<OrderResponse>(`/api/orders?email=${email}`)
+        .then((res) => setOrderExists(res.data.exists))
+        .catch(() => console.error("Failed to check order"));
     }
-  }, [router.query]);
+  }, [email]);
 
-  const checkExistingOrder = async (email: string) => {
-    try {
-      const res = await axios.get<OrderResponse>(`/api/orders?email=${email}`);
-      if (res.data.exists) {
-        setOrderExists(true);
-      }
-    } catch (error) {
-      setError("Failed to check order. Please try again.");
-    }
-  };
-
-  const startOrder = () => {
-    if (orderExists) {
-      router.push(`/select-dish?email=${email}`);
-    } else {
-      router.push(`/select-dish`);
-    }
+  const handleStartOrder = () => {
+    router.push(orderExists ? `/update-order?email=${email}` : `/select-dish`);
   };
 
   return (
-    <div>
-      <nav>
-        <Link href="/" className={router.pathname === "/" ? "active" : ""}>Home</Link>
-        <Link href="/select-dish" className={router.pathname === "/select-dish" ? "active" : ""}>Order</Link>
-      </nav>
+    <div className="flex flex-col items-center">
       <Image src="/logo.png" alt="Logo" width={150} height={100} />
-      <Carousel responsive={{ superLarge: { breakpoint: { max: 4000, min: 1024 }, items: 1 } }} containerClass="carousel-container">
-        <div className="carousel-item"><img src="/carousel1.jpg" alt="Carousel 1" /></div>
-        <div className="carousel-item"><img src="/carousel2.jpg" alt="Carousel 2" /></div>
-        <div className="carousel-item"><img src="/carousel3.jpg" alt="Carousel 3" /></div>
+      <Carousel responsive={{ superLarge: { breakpoint: { max: 4000, min: 1024 }, items: 1 } }}>
+        <div><img src="/carousel1.jpg" alt="Carousel 1" className="h-64 w-full object-cover" /></div>
+        <div><img src="/carousel2.jpg" alt="Carousel 2" className="h-64 w-full object-cover" /></div>
+        <div><img src="/carousel3.jpg" alt="Carousel 3" className="h-64 w-full object-cover" /></div>
       </Carousel>
-      <input type="email" placeholder="Enter email" value={email} onChange={(e) => setEmail(e.target.value)} />
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      <button onClick={startOrder}>Start Order</button>
+      <input
+        type="email"
+        placeholder="Enter email to start/update order"
+        className="p-3 border rounded mt-4"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      <button className="bg-red-600 text-white p-2 mt-4 rounded" onClick={handleStartOrder}>
+        Proceed
+      </button>
     </div>
   );
 };
